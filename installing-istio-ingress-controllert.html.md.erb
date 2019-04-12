@@ -10,9 +10,19 @@ This topic describes how to configure Istio as your <%= vars.product_full %> dep
 ## <a id='overview'></a> Overview
 
 [About Ingress Routing](https://docs.pivotal.io/runtimes/pks/1-3/nsxt-ingress-srvc-lb.html)
-A Kubernetes ingress resource exposes HTTP and HTTPS routes from outside the cluster to services within the cluster. Traffic routing is controlled by rules defined on the ingress resource. See the Kubernetes documentation for more information about ingress resources.
+A Kubernetes ingress resource exposes HTTP and HTTPS routes from outside the cluster to services within the cluster. 
+Traffic routing is controlled by rules defined on the ingress resource. 
 
-The NSX-T load balancer that is automatically provisioned by PKS provides two Layer 7 virtual servers for Kubernetes ingress resources, one for HTTP and the other for HTTPS. For more information, see Supported Load Balancer Features in the NSX-T documentation.
+<img src="images/ingress-architecture.png" alt="Ingress Archecture without NSX-T">
+<%#= original graphic is here images/ingress-architecture.graffle %>
+For more information about ingress resources see the Kubernetes documentation.
+
+The NSX-T load balancer that is automatically provisioned by PKS provides two Layer 7 virtual servers for 
+Kubernetes ingress resources, one for HTTP and the other for HTTPS. 
+
+<img src="images/ingress-architecture-nsxt.png" alt="Ingress Archecture on NSX-T">
+<%#= original graphic is here images/ingress-architecture-nsxt.graffle %>
+For more information about NSX-T load balancers see Supported Load Balancer Features in the NSX-T documentation.
 
 You define ingress resource configuration in the manifest of your Kubernetes deployment. Use wildcard DNS entries to route traffic to the exposed ingress resource.
 
@@ -72,9 +82,123 @@ Istio provides ingress routing for a cluster's application workload. Perform the
     kubectl -n istio-system scale deploy/istio-ingress --replicas=3
     ```
 
-## <a id='setup-lb'></a> Setup Load Balancers
+1. After running this command Istio will be up and running.  
+
+1. To review your LoadBalancer configuration, run the following command:
+
+    ```
+    kubectl  --namespace=istio-system get services
+    ```
+
+1. Configure a Load Balancer based on the environment you are deploying to.
+
+    * For Deploying to environments without NSX-T  
+        1. To obtain a list of worker Ips, run the following command:
+
+        ```
+        kubectl -o jsonpath='{.items[*].status.addresses[0].address}' get nodes
+        ```
+
+## <a id='setup-lb-not-nsxt'></a> Configure Load Balancers to environments without NSX-T
+1. To conigure a wildcard DNS entry to the EXTERNAL-IP that will be used by applications similar to the PAS “Apps Domain”
+1. To create a self-signed certificate run the following command:
+
+```
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /tmp/tls.key -out /tmp/tls.crt -subj "/CN=*.pks-cluster.haas-108.pez.pivotal.io"
+````
+
+Where `DOMAIN` is your cluster's domain.
+
+1. To upload your newly created certificate and key, run the following command: 
+
+```
+kubectl -n istio-system create secret tls istio-ingress-certs --key /tmp/tls.key --cert /tmp/tls.crt
+```
+
+## <a id='setup-lb-nsxt'></a> Configure Load Balancers to environments with NSX-T
+1. To conigure a wildcard DNS entry to the EXTERNAL-IP that will be used by applications similar to the PAS “Apps Domain”
+1. To create a self-signed certificate run the following command:
+
+```
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /tmp/tls.key -out /tmp/tls.crt -subj "/CN=*.pks-cluster.haas-108.pez.pivotal.io"
+````
+
+Where `DOMAIN` is your cluster's domain.
+
+1. To upload your newly created certificate and key, run the following command: 
+
+```
+kubectl -n istio-system create secret tls istio-ingress-certs --key /tmp/tls.key --cert /tmp/tls.crt
+```
 
 Istio provides ingress routing for a cluster's application workload. Perform the following steps to install Istio in your deployment.
+
+## <a id='deploy'></a> Configure App Deployment
+1. Create a YAML configuration file named `ingress-istio.yml`.
+1. Update the `ingress-istio.yml` file to match the following format:
+
+    ```
+    apiVersion: extensions/v1beta1
+    kind: Ingress
+    metadata:
+      name: APP-NAME-ingress
+      namespace: APP-SUBDOMAIN
+      annotations:
+        kubernetes.io/ingress.class: "istio"
+    spec:
+      rules:
+      - host: APP-SUBDOMAIN.DOMAIN-NAME
+        http:
+          paths:
+          - path: /.*
+            backend:
+              serviceName: APP-NAME-service
+              servicePort: PORT
+
+    ```
+
+    Where:
+    * `APP-NAME` is your application's name.
+    * `APP-SUBDOMAIN` is the subdomain name used to access your app.
+    * `DOMAIN-NAME` is your host domain.
+    * `PORT` is the port to use to access your app.
+
+    For example:
+
+    ```
+    apiVersion: extensions/v1beta1
+    kind: Ingress
+    metadata:
+      name: music-ingress
+      namespace: wildspinner
+      annotations:
+        kubernetes.io/ingress.class: "istio"
+    spec:
+      rules:
+      - host: wildspinner.example.com
+        http:
+          paths:
+          - path: /.*
+            backend:
+              serviceName: music-service
+              servicePort: 8080
+    ```
+
+
+## <a id='validate'></a> Validate configuration
+Verify your load balancer configuration by opening a browser to your application's URL using the following format:
+
+```
+https://APP-NAME.DOMAIN-NAME
+```
+
+For example:
+
+```
+https://wildspinner.example.com
+```
+
+
 
 1. To set
 1. To

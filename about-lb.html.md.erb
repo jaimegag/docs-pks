@@ -14,13 +14,14 @@ For <%= vars.product_short %> deployments on GCP, AWS, or vSphere without NSX-T,
 * **PKS API**: Configuring this load balancer allows you to run PKS Command Line Interface (PKS CLI) commands from your local workstation.
 * **Kubernetes Clusters**: Configuring a load balancer for each new cluster allows you to run Kubernetes CLI (kubectl) commands on the cluster.
 * **Workloads**: Configuring a load balancer for your application workloads allows external access to the services that run on your cluster. 
-Istio, an **Ingress Controller**, can be used as a workload load balancer for GCP, AWS, Azure, and vSphere without NSX-T.
 
-The following diagram shows where each of the above load balancers can be used within your <%= vars.product_short %> deployment. 
-An Ingress Controller can be used as a workload load balancer and is Pivotal's recommended load balancer option. 
-The following diagram applies to GCP, AWS, or on vSphere without NSX-T:
+The following diagram, applicable to GCP, AWS, and vSphere without NSX-T, shows where each of the above load balancers can be used 
+within your <%= vars.product_short %> deployment. 
 
 <%= image_tag("pks-diagram-lb.png", :alt => "PKS diagram including all load balancer options for PKS deployments without NSX-T") %>
+
+An Ingress Controller can be used as a workload load balancer environments. 
+Istio, Pivotal's recommended load balancer option, is an Ingress Controller that can be used as a workload load balancer.
 
 If you chose to not use an ingress controller and use either vSphere without NSX-T or GCP, you are expected to create your own 
 load balancers within your cloud provider console. If your cloud provider does not offer load balancing, you can use any external 
@@ -62,12 +63,12 @@ You must create a public subnet in each availability zone (AZ) where you are dep
 See the [AWS Prerequisites](deploy-workloads.html#aws) section of _Deploying and Accessing Basic Workloads_ before you create a workload load balancer.
 
 #### <a id='with-ingress'></a>Deploy with an Ingress Controller Workload Load Balancer
-If you chose to use an ingress controller for your workload load balancer, Pivotal recommends using Istio, 
-which can be deployed to AWS, Azure, GCP, and vSphere without NSX-T.
+Pivotal recommends using an ingress controller for your workload load balancer on deployments hosted on AWS, Azure, GCP, or vSphere without NSX-T. 
+Pivotal recommends using Istio as your ingress controller.
 
 For more information on deploying and Istio Ingress Controller as your workload load balancer, see [Installing Ingress Routing on Enterprise PKS](installing-istio-ingress-controllert.html)
 
-#### <a id='without-ingress'></a>Deploy Without an Ingress Workload Load Balancer
+#### <a id='without-ingress'></a>Deploy Without an Ingress Controller Workload Load Balancer
 
 If you chose to not use an ingress controller and use either vSphere without NSX-T or GCP, you are expected to create your own 
 load balancers within your cloud provider console. If your cloud provider does not offer load balancing, you can use any external 
